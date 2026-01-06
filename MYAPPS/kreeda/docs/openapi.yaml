@@ -1,0 +1,1411 @@
+openapi: 3.0.3
+info:
+  title: Krida Sports API
+  description: |
+    # Krida Sports Application API
+
+    The Krida Sports API provides comprehensive endpoints for managing sports events, user profiles, achievements, and community features. This API powers the Krida mobile and web applications.
+
+    ## Features
+    - User authentication and profile management
+    - Sports event creation and management
+    - Event registration and participation
+    - Achievement tracking and gamification
+    - Sports news and information
+    - Real-time notifications via WebSocket
+
+    ## Authentication
+    This API uses JWT (JSON Web Token) for authentication. Include the token in the Authorization header:
+    ```
+    Authorization: Bearer <your_jwt_token>
+    ```
+
+    ## Base URL
+    ```
+    http://localhost:4000/api
+    ```
+  version: 1.0.0
+  contact:
+    name: Krida Development Team
+    email: dev@krida-sports.com
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: http://localhost:4000/api
+    description: Development server
+  - url: https://api.krida-sports.com
+    description: Production server
+
+paths:
+  # Authentication endpoints
+  /auth/register:
+    post:
+      tags:
+        - Authentication
+      summary: Register a new user
+      description: Create a new user account with email and password
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+            example:
+              name: "Arjun Sharma"
+              email: "arjun@example.com"
+              password: "securepassword123"
+      responses:
+        '201':
+          description: User registered successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '400':
+          description: User already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Validation errors
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+
+  /auth/login:
+    post:
+      tags:
+        - Authentication
+      summary: Authenticate user
+      description: Login with email and password to get access token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+            example:
+              email: "arjun@example.com"
+              password: "securepassword123"
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '400':
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  # User management endpoints
+  /users/profile:
+    get:
+      tags:
+        - User Management
+      summary: Get user profile
+      description: Retrieve the authenticated user's profile information
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: User profile retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfileResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    put:
+      tags:
+        - User Management
+      summary: Update user profile
+      description: Update the authenticated user's profile information
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateProfileRequest'
+      responses:
+        '200':
+          description: Profile updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfileResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /users/stats:
+    get:
+      tags:
+        - User Management
+      summary: Get user statistics
+      description: Retrieve user's sports statistics and achievements
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: User statistics retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserStatsResponse'
+
+  /users/events:
+    get:
+      tags:
+        - User Management
+      summary: Get user's events
+      description: Retrieve events that the user has registered for or created
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: type
+          in: query
+          description: Filter by event type
+          schema:
+            type: string
+            enum: [registered, created, all]
+            default: all
+        - name: status
+          in: query
+          description: Filter by event status
+          schema:
+            type: string
+            enum: [upcoming, ongoing, completed]
+      responses:
+        '200':
+          description: User events retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserEventsResponse'
+
+  # Events management endpoints
+  /events:
+    get:
+      tags:
+        - Events
+      summary: Get all events
+      description: Retrieve a paginated list of sports events with optional filtering
+      parameters:
+        - name: sport
+          in: query
+          description: Filter by sport type
+          schema:
+            type: string
+        - name: city
+          in: query
+          description: Filter by city
+          schema:
+            type: string
+        - name: date
+          in: query
+          description: Filter by date (YYYY-MM-DD)
+          schema:
+            type: string
+            format: date
+        - name: status
+          in: query
+          description: Filter by event status
+          schema:
+            type: string
+            enum: [upcoming, ongoing, completed]
+        - name: limit
+          in: query
+          description: Number of events per page
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 50
+            default: 20
+        - name: page
+          in: query
+          description: Page number
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: search
+          in: query
+          description: Search in title and description
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Events retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventsResponse'
+
+    post:
+      tags:
+        - Events
+      summary: Create new event
+      description: Create a new sports event
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateEventRequest'
+      responses:
+        '201':
+          description: Event created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Validation errors
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+
+  /events/{id}:
+    get:
+      tags:
+        - Events
+      summary: Get single event
+      description: Retrieve detailed information about a specific event
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Event ID
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Event retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventDetailResponse'
+        '404':
+          description: Event not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    put:
+      tags:
+        - Events
+      summary: Update event
+      description: Update an existing event (only by creator)
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Event ID
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateEventRequest'
+      responses:
+        '200':
+          description: Event updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Not authorized to update this event
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    delete:
+      tags:
+        - Events
+      summary: Delete event
+      description: Delete an event (only by creator)
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Event ID
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Event deleted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Not authorized to delete this event
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /events/{id}/register:
+    post:
+      tags:
+        - Events
+      summary: Register for event
+      description: Register the authenticated user for an event
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Event ID
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Registration successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventRegistrationResponse'
+        '400':
+          description: Already registered or event full
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Event not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    delete:
+      tags:
+        - Events
+      summary: Unregister from event
+      description: Unregister the authenticated user from an event
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Event ID
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Unregistration successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+
+  # Sports information endpoints
+  /sports:
+    get:
+      tags:
+        - Sports
+      summary: Get all sports
+      description: Retrieve list of all available sports with information
+      responses:
+        '200':
+          description: Sports retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SportsResponse'
+
+  # News endpoints
+  /news:
+    get:
+      tags:
+        - News
+      summary: Get sports news
+      description: Retrieve latest sports news articles
+      parameters:
+        - name: category
+          in: query
+          description: Filter by sport category
+          schema:
+            type: string
+        - name: limit
+          in: query
+          description: Number of articles
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 50
+            default: 20
+        - name: page
+          in: query
+          description: Page number
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+      responses:
+        '200':
+          description: News articles retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NewsResponse'
+
+  # Achievement endpoints
+  /users/achievements:
+    get:
+      tags:
+        - Achievements
+      summary: Get user achievements
+      description: Retrieve user's achievements and progress
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Achievements retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AchievementsResponse'
+
+  # File upload endpoints
+  /upload/image:
+    post:
+      tags:
+        - File Upload
+      summary: Upload image
+      description: Upload profile pictures, event images, etc.
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+                type:
+                  type: string
+                  enum: [profile, event, news]
+      responses:
+        '200':
+          description: Image uploaded successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ImageUploadResponse'
+
+  # Search endpoints
+  /search:
+    get:
+      tags:
+        - Search
+      summary: Global search
+      description: Search across events, users, and sports
+      parameters:
+        - name: q
+          in: query
+          required: true
+          description: Search query
+          schema:
+            type: string
+        - name: type
+          in: query
+          description: Search type
+          schema:
+            type: string
+            enum: [events, users, sports, all]
+            default: all
+        - name: limit
+          in: query
+          description: Results per type
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 50
+            default: 10
+      responses:
+        '200':
+          description: Search results retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SearchResponse'
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    # Request schemas
+    RegisterRequest:
+      type: object
+      required:
+        - name
+        - email
+        - password
+      properties:
+        name:
+          type: string
+          minLength: 2
+          example: "Arjun Sharma"
+        email:
+          type: string
+          format: email
+          example: "arjun@example.com"
+        password:
+          type: string
+          minLength: 6
+          example: "securepassword123"
+
+    LoginRequest:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+          example: "arjun@example.com"
+        password:
+          type: string
+          example: "securepassword123"
+
+    UpdateProfileRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        profile:
+          $ref: '#/components/schemas/UserProfile'
+
+    CreateEventRequest:
+      type: object
+      required:
+        - title
+        - description
+        - sport
+        - date
+        - startTime
+        - endTime
+        - location
+        - maxParticipants
+      properties:
+        title:
+          type: string
+          minLength: 5
+          example: "Cricket Championship 2024"
+        description:
+          type: string
+          minLength: 20
+          example: "Inter-city cricket championship for amateur players"
+        sport:
+          type: string
+          example: "Cricket"
+        date:
+          type: string
+          format: date
+          example: "2024-03-15"
+        startTime:
+          type: string
+          pattern: '^([01]?[0-9]|2[0-3]):[0-5][0-9]$'
+          example: "09:00"
+        endTime:
+          type: string
+          pattern: '^([01]?[0-9]|2[0-3]):[0-5][0-9]$'
+          example: "17:00"
+        location:
+          $ref: '#/components/schemas/EventLocation'
+        maxParticipants:
+          type: integer
+          minimum: 2
+          example: 16
+        entryFee:
+          type: integer
+          minimum: 0
+          example: 500
+        difficulty:
+          type: string
+          enum: [Beginner, Intermediate, Advanced, Expert]
+          example: "Intermediate"
+        requirements:
+          type: array
+          items:
+            type: string
+          example: ["Age 18-35 years", "Cricket experience required"]
+        prizes:
+          type: array
+          items:
+            type: string
+          example: ["Trophy + ₹10,000 (Winner)", "Medal + ₹5,000 (Runner-up)"]
+        isPublic:
+          type: boolean
+          default: true
+        allowSpectators:
+          type: boolean
+          default: true
+        provideEquipment:
+          type: boolean
+          default: false
+        image:
+          type: string
+          format: uri
+          example: "https://example.com/cricket-event.jpg"
+
+    UpdateEventRequest:
+      allOf:
+        - $ref: '#/components/schemas/CreateEventRequest'
+
+    # Response schemas
+    AuthResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            token:
+              type: string
+              example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+            user:
+              $ref: '#/components/schemas/User'
+        message:
+          type: string
+          example: "User registered successfully"
+
+    UserProfileResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          $ref: '#/components/schemas/UserWithProfile'
+
+    UserStatsResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          $ref: '#/components/schemas/UserStats'
+
+    EventsResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            events:
+              type: array
+              items:
+                $ref: '#/components/schemas/Event'
+            pagination:
+              $ref: '#/components/schemas/Pagination'
+
+    EventResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          $ref: '#/components/schemas/Event'
+        message:
+          type: string
+          example: "Event created successfully"
+
+    EventDetailResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          $ref: '#/components/schemas/EventDetail'
+
+    EventRegistrationResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            eventId:
+              type: string
+              example: "64a7b8c9d1e2f3a4b5c6d7e8"
+            userId:
+              type: string
+              example: "64a7b8c9d1e2f3a4b5c6d7e9"
+            registeredAt:
+              type: string
+              format: date-time
+              example: "2024-01-16T10:30:00.000Z"
+        message:
+          type: string
+          example: "Registered for event successfully"
+
+    # Entity schemas
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "64a7b8c9d1e2f3a4b5c6d7e8"
+        name:
+          type: string
+          example: "Arjun Sharma"
+        email:
+          type: string
+          format: email
+          example: "arjun@example.com"
+
+    UserWithProfile:
+      allOf:
+        - $ref: '#/components/schemas/User'
+        - type: object
+          properties:
+            profile:
+              $ref: '#/components/schemas/UserProfile'
+            createdAt:
+              type: string
+              format: date-time
+              example: "2024-01-15T10:30:00.000Z"
+            updatedAt:
+              type: string
+              format: date-time
+              example: "2024-01-16T12:45:00.000Z"
+
+    UserProfile:
+      type: object
+      properties:
+        age:
+          type: integer
+          example: 28
+        sports:
+          type: array
+          items:
+            type: string
+          example: ["Cricket", "Football", "Running"]
+        location:
+          type: string
+          example: "Mumbai, Maharashtra"
+        bio:
+          type: string
+          example: "Passionate cricket player and sports enthusiast"
+        avatar:
+          type: string
+          format: uri
+          example: "https://example.com/avatar.jpg"
+        achievements:
+          type: array
+          items:
+            type: string
+          example: ["First Marathon", "Cricket Champion"]
+        phone:
+          type: string
+          example: "+91 9876543210"
+        skillLevels:
+          type: object
+          additionalProperties:
+            type: string
+          example:
+            Cricket: "Advanced"
+            Football: "Intermediate"
+        preferences:
+          type: object
+          properties:
+            notifications:
+              type: boolean
+              example: true
+            publicProfile:
+              type: boolean
+              example: true
+            shareLocation:
+              type: boolean
+              example: false
+
+    Event:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "64a7b8c9d1e2f3a4b5c6d7e8"
+        title:
+          type: string
+          example: "Mumbai Marathon 2024"
+        description:
+          type: string
+          example: "Annual marathon through Mumbai's iconic locations"
+        sport:
+          type: string
+          example: "Running"
+        date:
+          type: string
+          format: date
+          example: "2024-02-18"
+        startTime:
+          type: string
+          example: "06:00"
+        endTime:
+          type: string
+          example: "12:00"
+        location:
+          $ref: '#/components/schemas/EventLocation'
+        organizer:
+          type: string
+          example: "Mumbai Runners Club"
+        createdBy:
+          type: string
+          example: "64a7b8c9d1e2f3a4b5c6d7e9"
+        maxParticipants:
+          type: integer
+          example: 45000
+        currentParticipants:
+          type: integer
+          example: 38500
+        entryFee:
+          type: integer
+          example: 1500
+        difficulty:
+          type: string
+          example: "Intermediate"
+        status:
+          type: string
+          enum: [upcoming, ongoing, completed]
+          example: "upcoming"
+        requirements:
+          type: array
+          items:
+            type: string
+          example: ["Medical certificate required", "Age 18+ years"]
+        prizes:
+          type: array
+          items:
+            type: string
+          example: ["Gold medal + ₹50,000 (1st place)"]
+        image:
+          type: string
+          format: uri
+          example: "https://example.com/marathon-image.jpg"
+        isPublic:
+          type: boolean
+          example: true
+        allowSpectators:
+          type: boolean
+          example: true
+        provideEquipment:
+          type: boolean
+          example: false
+        createdAt:
+          type: string
+          format: date-time
+          example: "2024-01-01T10:30:00.000Z"
+        updatedAt:
+          type: string
+          format: date-time
+          example: "2024-01-15T14:20:00.000Z"
+
+    EventLocation:
+      type: object
+      required:
+        - name
+        - address
+      properties:
+        name:
+          type: string
+          example: "Marine Drive, Mumbai"
+        address:
+          type: string
+          example: "Marine Drive, Nariman Point, Mumbai, Maharashtra 400021"
+        latitude:
+          type: number
+          format: float
+          example: 18.9220
+        longitude:
+          type: number
+          format: float
+          example: 72.8347
+
+    Pagination:
+      type: object
+      properties:
+        currentPage:
+          type: integer
+          example: 1
+        totalPages:
+          type: integer
+          example: 5
+        totalEvents:
+          type: integer
+          example: 47
+        hasNext:
+          type: boolean
+          example: true
+        hasPrev:
+          type: boolean
+          example: false
+
+    # Error schemas
+    ErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+              example: "UNAUTHORIZED"
+            message:
+              type: string
+              example: "Authentication required"
+
+    ValidationError:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+              example: "VALIDATION_ERROR"
+            message:
+              type: string
+              example: "Validation failed"
+            details:
+              type: array
+              items:
+                type: object
+                properties:
+                  field:
+                    type: string
+                    example: "email"
+                  message:
+                    type: string
+                    example: "Email is required"
+
+    SuccessResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: "Operation completed successfully"
+
+    # Additional response schemas
+    UserEventsResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            registeredEvents:
+              type: array
+              items:
+                $ref: '#/components/schemas/Event'
+            createdEvents:
+              type: array
+              items:
+                $ref: '#/components/schemas/Event'
+
+    EventDetail:
+      allOf:
+        - $ref: '#/components/schemas/Event'
+        - type: object
+          properties:
+            participants:
+              type: array
+              items:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  name:
+                    type: string
+                  avatar:
+                    type: string
+                    format: uri
+                  registeredAt:
+                    type: string
+                    format: date-time
+            organizer:
+              type: object
+              properties:
+                id:
+                  type: string
+                name:
+                  type: string
+                avatar:
+                  type: string
+                  format: uri
+
+    UserStats:
+      type: object
+      properties:
+        totalEvents:
+          type: integer
+          example: 45
+        completedEvents:
+          type: integer
+          example: 38
+        upcomingEvents:
+          type: integer
+          example: 7
+        eventsCreated:
+          type: integer
+          example: 12
+        totalXP:
+          type: integer
+          example: 2450
+        level:
+          type: integer
+          example: 15
+        achievements:
+          type: array
+          items:
+            $ref: '#/components/schemas/Achievement'
+        friendsCount:
+          type: integer
+          example: 24
+        winRate:
+          type: number
+          format: float
+          example: 72.5
+        distanceCovered:
+          type: number
+          format: float
+          example: 485
+        hoursPlayed:
+          type: integer
+          example: 156
+
+    Achievement:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "achievement_1"
+        title:
+          type: string
+          example: "Marathon Master"
+        description:
+          type: string
+          example: "Complete your first marathon"
+        unlockedAt:
+          type: string
+          format: date-time
+          example: "2024-01-10T08:30:00.000Z"
+        xpReward:
+          type: integer
+          example: 200
+        rarity:
+          type: string
+          enum: [common, rare, epic, legendary]
+          example: "rare"
+
+    Sport:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "sport_1"
+        name:
+          type: string
+          example: "Cricket"
+        category:
+          type: string
+          example: "Popular"
+        description:
+          type: string
+          example: "The gentleman's game played with passion across India"
+        image:
+          type: string
+          format: uri
+          example: "https://example.com/cricket.jpg"
+        rules:
+          type: array
+          items:
+            type: string
+          example: ["Two teams of 11 players each", "Match formats: Test, ODI, T20"]
+        equipment:
+          type: array
+          items:
+            type: string
+          example: ["Cricket bat", "Cricket ball", "Wickets"]
+        olympicStatus:
+          type: string
+          example: "none"
+        popularCountries:
+          type: array
+          items:
+            type: string
+          example: ["India", "Australia", "England"]
+        stats:
+          type: object
+          properties:
+            totalAthletes:
+              type: integer
+              example: 100000000
+            worldRecord:
+              type: string
+              example: "Highest ODI Score: 498/4"
+
+    NewsArticle:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "news_1"
+        title:
+          type: string
+          example: "Indian Hockey Team Wins Asian Champions Trophy"
+        summary:
+          type: string
+          example: "Historic victory against Malaysia in the final"
+        content:
+          type: string
+          example: "The Indian hockey team created history..."
+        author:
+          type: string
+          example: "Sports India Reporter"
+        publishedAt:
+          type: string
+          format: date-time
+          example: "2024-01-15T10:30:00.000Z"
+        category:
+          type: string
+          example: "Hockey"
+        sport:
+          type: string
+          example: "Hockey"
+        image:
+          type: string
+          format: uri
+          example: "https://example.com/hockey-news.jpg"
+        tags:
+          type: array
+          items:
+            type: string
+          example: ["hockey", "asian-champions-trophy", "india"]
+        readTime:
+          type: integer
+          example: 4
+
+    SportsResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Sport'
+
+    NewsResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            articles:
+              type: array
+              items:
+                $ref: '#/components/schemas/NewsArticle'
+            pagination:
+              $ref: '#/components/schemas/Pagination'
+
+    AchievementsResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            unlockedAchievements:
+              type: array
+              items:
+                $ref: '#/components/schemas/Achievement'
+            availableAchievements:
+              type: array
+              items:
+                allOf:
+                  - $ref: '#/components/schemas/Achievement'
+                  - type: object
+                    properties:
+                      progress:
+                        type: integer
+                        example: 24
+                      maxProgress:
+                        type: integer
+                        example: 25
+                      requirements:
+                        type: array
+                        items:
+                          type: string
+                        example: ["Add 25 friends"]
+            stats:
+              type: object
+              properties:
+                totalAchievements:
+                  type: integer
+                  example: 25
+                unlockedAchievements:
+                  type: integer
+                  example: 8
+                totalXP:
+                  type: integer
+                  example: 1250
+                completionRate:
+                  type: integer
+                  example: 32
+
+    ImageUploadResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            url:
+              type: string
+              format: uri
+              example: "https://krida-cdn.example.com/images/profile/user123_avatar.jpg"
+            filename:
+              type: string
+              example: "user123_avatar.jpg"
+            size:
+              type: integer
+              example: 245760
+            mimetype:
+              type: string
+              example: "image/jpeg"
+        message:
+          type: string
+          example: "Image uploaded successfully"
+
+    SearchResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            events:
+              type: array
+              items:
+                $ref: '#/components/schemas/Event'
+            users:
+              type: array
+              items:
+                $ref: '#/components/schemas/User'
+            sports:
+              type: array
+              items:
+                $ref: '#/components/schemas/Sport'
+            totalResults:
+              type: integer
+              example: 15
+
+tags:
+  - name: Authentication
+    description: User authentication and authorization
+  - name: User Management
+    description: User profile and account management
+  - name: Events
+    description: Sports event creation and management
+  - name: Sports
+    description: Sports information and data
+  - name: News
+    description: Sports news and articles
+  - name: Achievements
+    description: User achievements and gamification
+  - name: File Upload
+    description: File and image upload functionality
+  - name: Search
+    description: Global search across the platform

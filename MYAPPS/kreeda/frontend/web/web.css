@@ -1,0 +1,151 @@
+/* Web-specific styles for Krida Sports App */
+
+/* Fix body scrolling and viewport issues */
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+}
+
+/* Ensure proper scrolling for the root container */
+#root {
+  height: 100vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Fix scrolling for main app container */
+.react-native-web-view {
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+  height: 100%;
+}
+
+/* Fix horizontal scrolling in FlatLists */
+[data-focusable="true"] {
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Hide scrollbars but keep functionality */
+.react-native-web-view::-webkit-scrollbar,
+[data-focusable="true"]::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.react-native-web-view::-webkit-scrollbar-track,
+[data-focusable="true"]::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.react-native-web-view::-webkit-scrollbar-thumb,
+[data-focusable="true"]::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.2);
+  border-radius: 10px;
+}
+
+.react-native-web-view::-webkit-scrollbar-thumb:hover,
+[data-focusable="true"]::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(0, 0, 0, 0.4);
+}
+
+/* Fix touch interactions on web */
+* {
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+/* Allow text selection for inputs and text areas */
+input, textarea, [contenteditable] {
+  -webkit-user-select: text;
+  -khtml-user-select: text;
+  -moz-user-select: text;
+  -ms-user-select: text;
+  user-select: text;
+}
+
+/* Fix cursor for interactive elements */
+[role="button"], 
+[data-testid*="button"],
+[data-focusable="true"] {
+  cursor: pointer;
+}
+
+/* Smooth transitions for better UX */
+[data-focusable="true"], 
+[role="button"] {
+  transition: opacity 0.2s ease, transform 0.1s ease;
+}
+
+[data-focusable="true"]:hover, 
+[role="button"]:hover {
+  opacity: 0.8;
+}
+
+[data-focusable="true"]:active, 
+[role="button"]:active {
+  transform: scale(0.98);
+}
+
+/* Fix viewport meta tag effects */
+@media screen and (max-width: 768px) {
+  html {
+    -webkit-text-size-adjust: 100%;
+    -ms-text-size-adjust: 100%;
+  }
+}
+
+/* Fix issues with nested ScrollViews */
+[data-testid="scrollview"] {
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Improve loading states */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+#root {
+  animation: fadeIn 0.3s ease-in;
+}
+
+/* Better focus indicators for accessibility */
+[data-focusable="true"]:focus,
+[role="button"]:focus {
+  outline: 2px solid #FF6B35;
+  outline-offset: 2px;
+}
+
+/* Fix layout shifts */
+img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+/* Prevent horizontal overflow */
+* {
+  box-sizing: border-box;
+}
+
+/* Responsive improvements */
+@media screen and (min-width: 768px) {
+  /* Desktop/tablet specific improvements */
+  .react-native-web-view::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+}

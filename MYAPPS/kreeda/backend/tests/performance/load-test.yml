@@ -1,0 +1,269 @@
+# Artillery Load Testing Configuration for Kreeda API
+config:
+  target: 'http://localhost:3000'
+  phases:
+    # Warm-up phase
+    - duration: 60
+      arrivalRate: 5
+      name: "Warm-up"
+    # Ramp-up phase
+    - duration: 120
+      arrivalRate: 10
+      rampTo: 50
+      name: "Ramp-up load"
+    # Sustained load phase
+    - duration: 300
+      arrivalRate: 50
+      name: "Sustained load"
+    # Peak load phase
+    - duration: 120
+      arrivalRate: 50
+      rampTo: 100
+      name: "Peak load"
+    # Cool-down phase
+    - duration: 60
+      arrivalRate: 100
+      rampTo: 5
+      name: "Cool-down"
+  
+  # Payload configuration
+  payload:
+    path: "./test-data.csv"
+    fields:
+      - "email"
+      - "password"
+      - "name"
+      - "sport"
+  
+  # Performance thresholds
+  ensure:
+    thresholds:
+      - http.response_time.p95: 1000  # 95% of responses should be under 1000ms
+      - http.response_time.p99: 2000  # 99% of responses should be under 2000ms
+      - http.request_rate: 45         # Should handle at least 45 requests per second
+      - http.codes.200: 95            # 95% success rate
+      - http.codes.500: 0             # Zero internal server errors
+  
+  # Global configuration
+  defaults:
+    headers:
+      Content-Type: 'application/json'
+      User-Agent: 'Artillery-Load-Test'
+
+# Test scenarios
+scenarios:
+  # Authentication load testing
+  - name: "Authentication Load Test"
+    weight: 30
+    flow:
+      # Register new users
+      - post:
+          url: "/api/auth/register"
+          json:
+            name: "{{ name }}"
+            email: "{{ email }}"
+            password: "{{ password }}"
+          expect:
+            - statusCode: [201, 400]  # 400 for duplicate users
+          capture:
+            - json: "$.data.token"
+              as: "authToken"
+      
+      # Login existing users
+      - post:
+          url: "/api/auth/login"
+          json:
+            email: "{{ email }}"
+            password: "{{ password }}"
+          expect:
+            - statusCode: [200, 401]
+          capture:
+            - json: "$.data.token"
+              as: "authToken"
+      
+      # Get user profile
+      - get:
+          url: "/api/auth/me"
+          headers:
+            Authorization: "Bearer {{ authToken }}"
+          expect:
+            - statusCode: [200, 401]
+      
+      # Think time between requests
+      - think: 1
+
+  # Events browsing and search
+  - name: "Events Browsing Load Test"
+    weight: 40
+    flow:
+      # Get all events (pagination test)
+      - get:
+          url: "/api/events"
+          qs:
+            page: "{{ $randomInt(1, 10) }}"
+            limit: "{{ $randomInt(5, 20) }}"
+          expect:
+            - statusCode: 200
+      
+      # Search events by sport
+      - get:
+          url: "/api/events"
+          qs:
+            sport: "{{ sport }}"
+            page: 1
+            limit: 10
+          expect:
+            - statusCode: 200
+      
+      # Filter events by difficulty
+      - get:
+          url: "/api/events"
+          qs:
+            difficulty: "Beginner"
+            limit: 10
+          expect:
+            - statusCode: 200
+      
+      # Search events by location
+      - get:
+          url: "/api/events"
+          qs:
+            location: "Mumbai"
+            limit: 10
+          expect:
+            - statusCode: 200
+      
+      # Date range filtering
+      - get:
+          url: "/api/events"
+          qs:
+            dateFrom: "2024-01-01"
+            dateTo: "2024-12-31"
+            limit: 10
+          expect:
+            - statusCode: 200
+      
+      - think: 2
+
+  # Event management operations
+  - name: "Event Management Load Test"
+    weight: 20
+    flow:
+      # Login first
+      - post:
+          url: "/api/auth/login"
+          json:
+            email: "{{ email }}"
+            password: "{{ password }}"
+          capture:
+            - json: "$.data.token"
+              as: "authToken"
+      
+      # Create event
+      - post:
+          url: "/api/events"
+          headers:
+            Authorization: "Bearer {{ authToken }}"
+          json:
+            title: "Load Test Event {{ $randomInt(1000, 9999) }}"
+            description: "This is a load test event"
+            sport: "{{ sport }}"
+            date: "2024-06-01"
+            startTime: "10:00"
+            endTime: "12:00"
+            location:
+              name: "Test Venue"
+              address: "Test Address, Mumbai"
+              latitude: 19.0760
+              longitude: 72.8777
+            maxParticipants: 20
+            entryFee: 0
+            difficulty: "Beginner"
+          expect:
+            - statusCode: [201, 400, 401]
+          capture:
+            - json: "$.data._id"
+              as: "eventId"
+      
+      # Get created event details
+      - get:
+          url: "/api/events/{{ eventId }}"
+          expect:
+            - statusCode: [200, 404]
+      
+      # Update event (if created successfully)
+      - put:
+          url: "/api/events/{{ eventId }}"
+          headers:
+            Authorization: "Bearer {{ authToken }}"
+          json:
+            title: "Updated Load Test Event {{ $randomInt(1000, 9999) }}"
+            description: "This is an updated load test event"
+            maxParticipants: 25
+          expect:
+            - statusCode: [200, 400, 401, 404]
+      
+      - think: 3
+
+  # Event registration flow
+  - name: "Event Registration Load Test"
+    weight: 10
+    flow:
+      # Login
+      - post:
+          url: "/api/auth/login"
+          json:
+            email: "{{ email }}"
+            password: "{{ password }}"
+          capture:
+            - json: "$.data.token"
+              as: "authToken"
+      
+      # Get events to find one to register for
+      - get:
+          url: "/api/events"
+          qs:
+            limit: 5
+          capture:
+            - json: "$.data.items[0]._id"
+              as: "eventId"
+      
+      # Register for event
+      - post:
+          url: "/api/events/{{ eventId }}/register"
+          headers:
+            Authorization: "Bearer {{ authToken }}"
+          expect:
+            - statusCode: [200, 400, 401, 404]
+      
+      # Unregister from event
+      - delete:
+          url: "/api/events/{{ eventId }}/register"
+          headers:
+            Authorization: "Bearer {{ authToken }}"
+          expect:
+            - statusCode: [200, 400, 401, 404]
+      
+      - think: 2
+
+# Custom functions for dynamic data
+functions:
+  # Generate random event data
+  generateEventData: |
+    const sports = ['Cricket', 'Football', 'Tennis', 'Basketball', 'Swimming'];
+    const difficulties = ['Beginner', 'Intermediate', 'Advanced'];
+    
+    return {
+      sport: sports[Math.floor(Math.random() * sports.length)],
+      difficulty: difficulties[Math.floor(Math.random() * difficulties.length)]
+    };
+
+# Metrics collection
+plugins:
+  expect: {}
+  metrics-by-endpoint:
+    useOnlyRequestNames: true
+  hdrhistogram: {}
+  
+# Reporting configuration
+reportingMode: 'json'
