@@ -1,4 +1,15 @@
-﻿import { Category, OrderStatus } from "@prisma/client";
+﻿export const CATEGORIES = ["BREAKFAST", "MEALS", "SNACKS"] as const;
+export type Category = (typeof CATEGORIES)[number];
+
+export const ORDER_STATUSES = [
+  "PENDING",
+  "PAID",
+  "PREPARING",
+  "OUT_FOR_DELIVERY",
+  "DELIVERED",
+  "CANCELLED"
+] as const;
+export type OrderStatus = (typeof ORDER_STATUSES)[number];
 
 export const categoryLabels: Record<Category, string> = {
   BREAKFAST: "Breakfast",

@@ -1,6 +1,6 @@
-﻿import type { Metadata } from "next";
-import Link from "next/link";
+import type { Metadata } from "next";
 import Image from "next/image";
+import Link from "next/link";
 import { ArrowRight, Flame } from "lucide-react";
 
 import { AddToCartButton } from "@/components/cart/add-to-cart-button";
@@ -10,6 +10,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getFeaturedItems } from "@/lib/menu";
 import { formatCurrency } from "@/lib/utils";
+
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Home"
@@ -92,11 +94,7 @@ export default async function HomePage() {
         subtitle="Built for comfort food lovers who want quality and speed."
       >
         <div className="grid gap-4 md:grid-cols-3">
-          {[
-            "Traditional Andhra recipes",
-            "Fast cloud-kitchen delivery",
-            "Fresh batches made every day"
-          ].map((point) => (
+          {["Traditional Andhra recipes", "Fast cloud-kitchen delivery", "Fresh batches made every day"].map((point) => (
             <Card key={point}>
               <CardContent className="flex items-center gap-3 pt-5">
                 <Flame className="h-5 w-5 text-primary" />

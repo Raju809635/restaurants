@@ -1,6 +1,5 @@
 ﻿"use client";
 
-import { Category, OrderStatus } from "@prisma/client";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -8,7 +7,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { categoryLabels, orderStatusLabels } from "@/lib/constants";
+import {
+  CATEGORIES,
+  ORDER_STATUSES,
+  categoryLabels,
+  orderStatusLabels,
+  type Category,
+  type OrderStatus
+} from "@/lib/constants";
 
 type MenuItem = {
   id: string;
@@ -97,9 +103,9 @@ export function AdminPanel({ menuItems, orders }: Props) {
                 className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
                 defaultValue="BREAKFAST"
               >
-                {Object.entries(categoryLabels).map(([key, value]) => (
-                  <option key={key} value={key}>
-                    {value}
+                {CATEGORIES.map((category) => (
+                  <option key={category} value={category}>
+                    {categoryLabels[category]}
                   </option>
                 ))}
               </select>
@@ -148,9 +154,9 @@ export function AdminPanel({ menuItems, orders }: Props) {
                 value={order.status}
                 onChange={(e) => updateStatus(order.id, e.target.value as OrderStatus)}
               >
-                {Object.entries(orderStatusLabels).map(([key, value]) => (
-                  <option key={key} value={key}>
-                    {value}
+                {ORDER_STATUSES.map((status) => (
+                  <option key={status} value={status}>
+                    {orderStatusLabels[status]}
                   </option>
                 ))}
               </select>

@@ -1,8 +1,10 @@
-﻿import type { Metadata } from "next";
+import type { Metadata } from "next";
 
 import { MenuGrid } from "@/components/menu/menu-grid";
 import { Section } from "@/components/shared/section";
 import { getMenuItems } from "@/lib/menu";
+
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Menu",

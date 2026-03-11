@@ -6,6 +6,15 @@ import { Section } from "@/components/shared/section";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
+type MenuCategory = "BREAKFAST" | "MEALS" | "SNACKS";
+type AdminOrderStatus =
+  | "PENDING"
+  | "PAID"
+  | "PREPARING"
+  | "OUT_FOR_DELIVERY"
+  | "DELIVERED"
+  | "CANCELLED";
+
 export default async function AdminPage() {
   const session = await getServerSession(authOptions);
 
@@ -35,14 +44,28 @@ export default async function AdminPage() {
   return (
     <Section title="Admin Dashboard" subtitle="Manage menu catalog and incoming orders.">
       <AdminPanel
-        menuItems={menuItems.map((item) => ({
-          ...item,
-          price: item.price.toString()
-        }))}
-        orders={orders.map((order) => ({
-          ...order,
-          totalAmount: order.totalAmount.toString()
-        }))}
+        menuItems={menuItems.map(
+          (item: {
+            id: string;
+            name: string;
+            category: MenuCategory;
+            price: { toString(): string };
+          }) => ({
+            ...item,
+            price: item.price.toString()
+          })
+        )}
+        orders={orders.map(
+          (order: {
+            id: string;
+            status: AdminOrderStatus;
+            totalAmount: { toString(): string };
+            user: { name: string | null; email: string };
+          }) => ({
+            ...order,
+            totalAmount: order.totalAmount.toString()
+          })
+        )}
       />
     </Section>
   );

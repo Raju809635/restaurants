@@ -1,13 +1,13 @@
-﻿import { OrderStatus } from "@prisma/client";
-import { getServerSession } from "next-auth";
+﻿import { getServerSession } from "next-auth";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import { authOptions } from "@/lib/auth";
+import { ORDER_STATUSES } from "@/lib/constants";
 import { prisma } from "@/lib/prisma";
 
 const schema = z.object({
-  status: z.nativeEnum(OrderStatus)
+  status: z.enum(ORDER_STATUSES)
 });
 
 export async function PATCH(

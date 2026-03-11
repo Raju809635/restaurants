@@ -1,4 +1,4 @@
-﻿import { PrismaClient, Category, Role } from "@prisma/client";
+import { PrismaClient, type Prisma } from "@prisma/client";
 import bcrypt from "bcryptjs";
 
 const prisma = new PrismaClient();
@@ -13,62 +13,57 @@ async function main() {
       name: "Chinnamma Admin",
       email: "admin@chinnammaruchulu.com",
       password: adminPassword,
-      role: Role.ADMIN
+      role: "ADMIN"
     }
   });
 
-  const menuItems = [
+  const menuItems: Prisma.MenuItemCreateManyInput[] = [
     {
       name: "Idli Sambar",
       description: "Soft idlis served with hot sambar and coconut chutney.",
       image: "https://images.unsplash.com/photo-1668236543090-82eba5ee5976?auto=format&fit=crop&w=1200&q=80",
       price: 89,
-      category: Category.BREAKFAST
+      category: "BREAKFAST"
     },
     {
       name: "Pesarattu",
       description: "Green gram dosa with ginger chutney.",
       image: "https://images.unsplash.com/photo-1701579231307-c81ce9fe36b3?auto=format&fit=crop&w=1200&q=80",
       price: 119,
-      category: Category.BREAKFAST
+      category: "BREAKFAST"
     },
     {
       name: "Andhra Meals",
       description: "Rice, pappu, curry, sambar, rasam, and pickle.",
       image: "https://images.unsplash.com/photo-1701579231211-0f2772f32f31?auto=format&fit=crop&w=1200&q=80",
       price: 179,
-      category: Category.MEALS
+      category: "MEALS"
     },
     {
       name: "Gongura Chicken Meal",
       description: "Spicy gongura chicken with steamed rice.",
       image: "https://images.unsplash.com/photo-1567188040759-fb8a883dc6d8?auto=format&fit=crop&w=1200&q=80",
       price: 249,
-      category: Category.MEALS
+      category: "MEALS"
     },
     {
       name: "Punugulu",
       description: "Crispy snack balls served with peanut chutney.",
       image: "https://images.unsplash.com/photo-1601050690597-df0568f70950?auto=format&fit=crop&w=1200&q=80",
       price: 99,
-      category: Category.SNACKS
+      category: "SNACKS"
     },
     {
       name: "Mirchi Bajji",
       description: "Andhra style stuffed chilli fritters.",
       image: "https://images.unsplash.com/photo-1626804475297-41608ea09aeb?auto=format&fit=crop&w=1200&q=80",
       price: 109,
-      category: Category.SNACKS
+      category: "SNACKS"
     }
   ];
 
-  for (const item of menuItems) {
-    await prisma.menuItem.upsert({
-      where: { name: item.name },
-      update: item,
-      create: item
-    });
-  }
+  await prisma.menuItem.deleteMany();
+  await prisma.menuItem.createMany({ data: menuItems });
 }
 
 main()

@@ -1,9 +1,9 @@
-﻿import { Category } from "@prisma/client";
-import { getServerSession } from "next-auth";
+﻿import { getServerSession } from "next-auth";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import { authOptions } from "@/lib/auth";
+import { CATEGORIES } from "@/lib/constants";
 import { prisma } from "@/lib/prisma";
 
 const schema = z.object({
@@ -11,7 +11,7 @@ const schema = z.object({
   description: z.string().min(5),
   image: z.string().url(),
   price: z.number().positive(),
-  category: z.nativeEnum(Category)
+  category: z.enum(CATEGORIES)
 });
 
 async function ensureAdmin() {

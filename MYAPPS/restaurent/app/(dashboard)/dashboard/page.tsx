@@ -1,4 +1,3 @@
-﻿import { OrderStatus } from "@prisma/client";
 import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
 
@@ -6,7 +5,7 @@ import { Section } from "@/components/shared/section";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { authOptions } from "@/lib/auth";
-import { orderStatusLabels } from "@/lib/constants";
+import { orderStatusLabels, type OrderStatus } from "@/lib/constants";
 import { prisma } from "@/lib/prisma";
 import { formatCurrency } from "@/lib/utils";
 
@@ -52,10 +51,14 @@ export default async function DashboardPage() {
             <Card key={order.id}>
               <CardHeader className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                 <CardTitle className="text-xl">Order #{order.id.slice(-6).toUpperCase()}</CardTitle>
-                <Badge className={statusStyles[order.status]}>{orderStatusLabels[order.status]}</Badge>
+                <Badge className={statusStyles[order.status as OrderStatus]}>
+                  {orderStatusLabels[order.status as OrderStatus]}
+                </Badge>
               </CardHeader>
               <CardContent className="space-y-2 text-sm text-muted-foreground">
-                <p>Total: <span className="font-semibold text-primary">{formatCurrency(Number(order.totalAmount))}</span></p>
+                <p>
+                  Total: <span className="font-semibold text-primary">{formatCurrency(Number(order.totalAmount))}</span>
+                </p>
                 <p>Placed: {order.createdAt.toLocaleString("en-IN")}</p>
                 <div className="rounded-md bg-background/50 p-3">
                   {order.items.map((item) => (

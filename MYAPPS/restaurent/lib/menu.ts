@@ -1,5 +1,4 @@
-﻿import { Category } from "@prisma/client";
-
+﻿import { type Category } from "@/lib/constants";
 import { prisma } from "@/lib/prisma";
 
 export async function getMenuItems(category?: Category) {

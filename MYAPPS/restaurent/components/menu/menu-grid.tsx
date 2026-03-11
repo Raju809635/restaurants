@@ -1,14 +1,13 @@
 ﻿"use client";
 
 import { useMemo, useState } from "react";
+import Image from "next/image";
 
 import { AddToCartButton } from "@/components/cart/add-to-cart-button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { categoryLabels } from "@/lib/constants";
+import { CATEGORIES, categoryLabels, type Category } from "@/lib/constants";
 import { formatCurrency } from "@/lib/utils";
-import { Category } from "@prisma/client";
-import Image from "next/image";
 
 type MenuItem = {
   id: string;
@@ -23,7 +22,7 @@ type MenuGridProps = {
   items: MenuItem[];
 };
 
-const categories: (Category | "ALL")[] = ["ALL", "BREAKFAST", "MEALS", "SNACKS"];
+const categories: (Category | "ALL")[] = ["ALL", ...CATEGORIES];
 
 export function MenuGrid({ items }: MenuGridProps) {
   const [category, setCategory] = useState<Category | "ALL">("ALL");
@@ -58,9 +57,7 @@ export function MenuGrid({ items }: MenuGridProps) {
             <CardHeader className="space-y-3">
               <div className="flex items-center justify-between gap-3">
                 <CardTitle className="text-xl">{item.name}</CardTitle>
-                <span className="font-semibold text-primary">
-                  {formatCurrency(item.price)}
-                </span>
+                <span className="font-semibold text-primary">{formatCurrency(item.price)}</span>
               </div>
               <Badge>{categoryLabels[item.category]}</Badge>
             </CardHeader>
