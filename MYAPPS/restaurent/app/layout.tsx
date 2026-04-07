@@ -38,7 +38,7 @@ export default function RootLayout({
       <body>
         <Providers>
           <Header />
-          <main className="container py-10">{children}</main>
+          <main className="page-shell container py-8 md:py-10">{children}</main>
           <Footer />
           <WhatsAppButton />
         </Providers>

@@ -5,6 +5,10 @@
 @tailwind utilities;
 
 @layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
   :root {
     --background: 20 25% 8%;
     --foreground: 40 40% 96%;
@@ -34,7 +38,33 @@
 
   body {
     @apply bg-background text-foreground font-sans;
-    background-image: radial-gradient(circle at 5% 5%, rgba(255, 153, 72, 0.12), transparent 40%), radial-gradient(circle at 90% 10%, rgba(255, 89, 67, 0.08), transparent 30%);
+    background-image:
+      radial-gradient(circle at 5% 5%, rgba(255, 153, 72, 0.16), transparent 40%),
+      radial-gradient(circle at 90% 10%, rgba(255, 89, 67, 0.08), transparent 30%),
+      linear-gradient(180deg, #140c0e 0%, #090607 42%, #080506 100%);
     min-height: 100vh;
+  }
+
+  ::selection {
+    background: rgba(255, 165, 86, 0.32);
+    color: white;
+  }
+}
+
+@layer components {
+  .page-shell {
+    animation: page-enter 0.8s ease-out both;
+  }
+}
+
+@keyframes page-enter {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
